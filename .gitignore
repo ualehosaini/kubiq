@@ -1,0 +1,30 @@
+# Go build and workspace files
+/bin/
+/build/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+description.txt
+
+# Go modules
+vendor/
+
+# IDE/editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.DS_Store
+
+# Logs
+*.log
+
+# Dependency directories (remove the comment below if you use Go modules)
+# /vendor/
+
+.github/*.md
+
