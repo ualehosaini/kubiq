@@ -6,15 +6,17 @@ import (
 	"os/exec"
 )
 
-const kubiqVersion = "0.1.4-beta"
+const kubiqVersion = "0.1.5-beta"
 
 func main() {
-	args := os.Args[1:]
+	origArgs := os.Args[1:]
 	debug := false
-	for _, arg := range args {
+	var args []string
+	for _, arg := range origArgs {
 		if arg == "--debug" {
 			debug = true
-			break
+		} else {
+			args = append(args, arg)
 		}
 	}
 	if len(args) == 0 {
