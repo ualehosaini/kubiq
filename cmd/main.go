@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 const kubiqVersion = "0.1.5-beta"
@@ -19,14 +22,29 @@ func main() {
 			args = append(args, arg)
 		}
 	}
+
+	// Helper to process and print kubectl output, replacing 'kubectl' with 'kubiq' and adding guidance
+	printKubiqHelp := func(r io.Reader) {
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(r)
+		out := buf.String()
+		replaced := strings.ReplaceAll(out, "kubectl", "kubiq")
+		fmt.Print(replaced)
+		if strings.Contains(strings.ToLower(replaced), "usage:") || strings.Contains(strings.ToLower(replaced), "help") {
+			fmt.Println("\n[GUIDANCE] You are using kubiq, a wrapper for kubectl. All kubectl commands and flags work the same way, but you can use 'kubiq' instead of 'kubectl' in all examples and help texts.")
+		}
+	}
+
 	if len(args) == 0 {
 		fmt.Printf("kubiq version %s (beta)\n", kubiqVersion)
 		fmt.Println("-- kubiq wraps kubectl and adds extensions --")
 		cmd := exec.Command("kubectl", "help")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		var outBuf bytes.Buffer
+		cmd.Stdout = &outBuf
+		cmd.Stderr = &outBuf
 		cmd.Env = os.Environ()
 		err := cmd.Run()
+		printKubiqHelp(&outBuf)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error running kubectl help: %v\n", err)
 			os.Exit(1)
@@ -44,11 +62,20 @@ func main() {
 	}
 
 	cmd := exec.Command("kubectl", args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	var outBuf, errBuf bytes.Buffer
+	cmd.Stdout = &outBuf
+	cmd.Stderr = &errBuf
 	cmd.Stdin = os.Stdin
 	cmd.Env = os.Environ()
-	if err := cmd.Run(); err != nil {
+	err := cmd.Run()
+	// Print kubectl output, replacing 'kubectl' with 'kubiq' and adding guidance if help/usage detected
+	if outBuf.Len() > 0 {
+		printKubiqHelp(&outBuf)
+	}
+	if errBuf.Len() > 0 {
+		printKubiqHelp(&errBuf)
+	}
+	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
 			os.Exit(exitError.ExitCode())
 		}
