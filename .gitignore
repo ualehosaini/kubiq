@@ -1,6 +1,7 @@
 # Go build and workspace files
 /bin/
 /build/
+/notes/
 *.exe
 *.exe~
 *.dll
@@ -8,8 +9,6 @@
 *.dylib
 *.test
 *.out
-*note*.md
-*note*.txt
 
 # Go modules
 vendor/
