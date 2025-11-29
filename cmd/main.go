@@ -24,13 +24,15 @@ func main() {
 	}
 
 	// Helper to process and print kubectl output, replacing 'kubectl' with 'kubiq' and adding guidance
-	printKubiqHelp := func(r io.Reader) {
+	printKubiqHelp := func(r io.Reader, doReplace bool) {
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(r)
 		out := buf.String()
-		replaced := strings.ReplaceAll(out, "kubectl", "kubiq")
-		fmt.Print(replaced)
-		if strings.Contains(strings.ToLower(replaced), "usage:") || strings.Contains(strings.ToLower(replaced), "help") {
+		if doReplace {
+			out = strings.ReplaceAll(out, "kubectl", "kubiq")
+		}
+		fmt.Print(out)
+		if doReplace && (strings.Contains(strings.ToLower(out), "usage:") || strings.Contains(strings.ToLower(out), "help")) {
 			fmt.Println("\n[GUIDANCE] You are using kubiq, a wrapper for kubectl. All kubectl commands and flags work the same way, but you can use 'kubiq' instead of 'kubectl' in all examples and help texts.")
 		}
 	}
@@ -44,7 +46,7 @@ func main() {
 		cmd.Stderr = &outBuf
 		cmd.Env = os.Environ()
 		err := cmd.Run()
-		printKubiqHelp(&outBuf)
+		printKubiqHelp(&outBuf, true)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error running kubectl help: %v\n", err)
 			os.Exit(1)
@@ -67,13 +69,21 @@ func main() {
 	cmd.Stderr = &errBuf
 	cmd.Stdin = os.Stdin
 	cmd.Env = os.Environ()
+	// Detect if --v=N or -v=N is present (for kubectl verbose logs)
+	doReplace := true
+	for _, a := range args {
+		if strings.HasPrefix(a, "--v=") || strings.HasPrefix(a, "-v=") {
+			doReplace = false
+			break
+		}
+	}
 	err := cmd.Run()
 	// Print kubectl output, replacing 'kubectl' with 'kubiq' and adding guidance if help/usage detected
 	if outBuf.Len() > 0 {
-		printKubiqHelp(&outBuf)
+		printKubiqHelp(&outBuf, doReplace)
 	}
 	if errBuf.Len() > 0 {
-		printKubiqHelp(&errBuf)
+		printKubiqHelp(&errBuf, doReplace)
 	}
 	if err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
