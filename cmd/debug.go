@@ -9,9 +9,19 @@ import (
 )
 
 func logDebug(level, msg string) {
-	now := time.Now()
-	ts := now.Format("0102 15:04:05.000000")
-	fmt.Printf("I%s   %s [kubiq debug] %s\n", ts, level, msg)
+       now := time.Now()
+       ts := now.Format("0102 15:04:05.000000")
+       var colorStart, colorEnd string
+       switch level {
+       case "ERROR":
+	       colorStart = "\033[31m" // Red
+       case "INFO ":
+	       colorStart = "\033[33m" // Yellow
+       default:
+	       colorStart = ""
+       }
+       colorEnd = "\033[0m"
+       fmt.Printf("%sI%s   %s [kubiq debug] %s%s\n", colorStart, ts, level, msg, colorEnd)
 }
 
 func printDebugInfo() {
