@@ -5,29 +5,36 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
+
+func logDebug(level, msg string) {
+	now := time.Now()
+	ts := now.Format("0102 15:04:05.000000")
+	fmt.Printf("I%s   %s [kubiq debug] %s\n", ts, level, msg)
+}
 
 func printDebugInfo() {
 	kubectlPath, err := exec.LookPath("kubectl")
 	if err != nil {
-		fmt.Println("[kubiq debug] kubectl not found in PATH")
+		logDebug("INFO ", "kubectl not found in PATH")
 	} else {
-		fmt.Printf("[kubiq debug] kubectl path: %s\n", kubectlPath)
+		logDebug("INFO ", fmt.Sprintf("kubectl path: %s", kubectlPath))
 	}
 
 	kubeconfig := os.Getenv("KUBECONFIG")
 	if kubeconfig == "" {
-		fmt.Println("[kubiq debug] KUBECONFIG not set (using default: ~/.kube/config)")
+		logDebug("INFO ", "KUBECONFIG not set (using default: ~/.kube/config)")
 	} else {
-		fmt.Printf("[kubiq debug] KUBECONFIG: %s\n", kubeconfig)
+		logDebug("INFO ", fmt.Sprintf("KUBECONFIG: %s", kubeconfig))
 	}
 
 	cmd := exec.Command("kubectl", "config", "current-context")
 	cmd.Env = os.Environ()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Printf("[kubiq debug] Error getting current context: %v\n", err)
+		logDebug("ERROR", fmt.Sprintf("Error getting current context: %v", err))
 	} else {
-		fmt.Printf("[kubiq debug] kubectl current-context: %s\n", strings.TrimSpace(string(output)))
+		logDebug("INFO ", fmt.Sprintf("kubectl current-context: %s", strings.TrimSpace(string(output))))
 	}
 }
