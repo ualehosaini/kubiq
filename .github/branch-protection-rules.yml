@@ -1,0 +1,28 @@
+# See https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-branch-rules/about-protected-branches for details
+# This file configures branch protection for the main branch.
+
+# This is a GitHub branch protection ruleset for the main branch.
+# Only the repository owner can approve and merge pull requests to main.
+
+name: "Protect main branch"
+create_protected: true
+rules:
+  - applies_to: "main"
+    required_pull_request_reviews:
+      required_approving_review_count: 1
+      require_code_owner_reviews: true
+      dismissal_restrictions:
+        users:
+          - "ualehosaini"
+        teams: []
+    enforce_admins: false # Allow owner/admin to push directly
+    restrictions:
+      users:
+        - "ualehosaini"
+      teams: []
+    required_status_checks:
+      strict: true
+      contexts: []
+    required_linear_history: true
+    allow_force_pushes: false
+    allow_deletions: false
